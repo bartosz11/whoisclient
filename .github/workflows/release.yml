@@ -1,0 +1,54 @@
+name: Publish artifact and javadocs
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  artifact:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, 'release version') || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 8
+          distribution: "temurin"
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: ./gradlew build
+      - name: Publish artifact
+        run: ./gradlew publishMavenPublicationToBartoszReleasesRepository -PbartoszReleasesUsername=${{ secrets.MAVEN_NAME }} -PbartoszReleasesPassword=${{ secrets.MAVEN_SECRET }}
+  javadocs:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, 'release version') || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 8
+          distribution: "temurin"
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build javadocs with Gradle
+        run: ./gradlew javadoc
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/docs/javadoc'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
