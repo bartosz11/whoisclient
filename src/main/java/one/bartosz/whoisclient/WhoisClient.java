@@ -1,13 +1,12 @@
 package one.bartosz.whoisclient;
 
+import one.bartosz.whoisclient.exceptions.WhoisConnectionTimeoutException;
 import one.bartosz.whoisclient.exceptions.WhoisIOException;
 import one.bartosz.whoisclient.exceptions.WhoisServerResolveException;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,10 +66,11 @@ public class WhoisClient {
      * @param host     WHOIS server hostname
      * @param port     WHOIS server port, must fit in 0-65535 inclusive range.
      * @return WHOIS server response
-     * @throws WhoisServerResolveException Thrown when resolving hostname of default WHOIS server fails.
-     * @throws WhoisIOException            Thrown when any other network I/O error occurs while querying the server.
+     * @throws WhoisServerResolveException     Thrown when resolving hostname of default WHOIS server fails.
+     * @throws WhoisConnectionTimeoutException Thrown when the configured timeout expires before connecting to the server.
+     * @throws WhoisIOException                Thrown when any other network I/O error occurs while querying the server.
      */
-    public WhoisResponse query(String resource, String host, int port) throws WhoisServerResolveException, WhoisIOException {
+    public WhoisResponse query(String resource, String host, int port) throws WhoisServerResolveException, WhoisConnectionTimeoutException, WhoisIOException {
         ValidationUtil.validatePort(port);
         //todo maybe "sanitize" request later
         String request = resource + "\r\n";
@@ -79,7 +79,9 @@ public class WhoisClient {
         HashMap<String, List<String>> responseFields = new HashMap<>();
         try {
             InetAddress ip = InetAddress.getByName(host);
-            Socket socket = new Socket(ip.getHostAddress(), port);
+            Socket socket = new Socket();
+            //sadly there's no constructor in the Socket class that has a timeout param
+            socket.connect(new InetSocketAddress(ip.getHostAddress(), port), config.getConnectTimeout());
             //Write the request
             socket.getOutputStream().write(request.getBytes(charset));
             BufferedInputStream bis = new BufferedInputStream(socket.getInputStream());
@@ -108,6 +110,8 @@ public class WhoisClient {
             return new WhoisResponse(resource, rawResponse, Collections.unmodifiableMap(responseFields), host);
         } catch (UnknownHostException e) {
             throw new WhoisServerResolveException("Failed to resolve WHOIS server hostname: " + host, e.getCause());
+        } catch (SocketTimeoutException e) {
+            throw new WhoisConnectionTimeoutException("Connection to " + host + " timed out after " + config.getConnectTimeout() + " ms.");
         } catch (IOException e) {
             throw new WhoisIOException("An I/O error occurred during request about " + resource + " from " + host, e.getCause());
         }

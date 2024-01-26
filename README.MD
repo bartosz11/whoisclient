@@ -18,7 +18,7 @@ implementation in the library itself in the future.
 ```java
 public class Main {
 
-    public static void main(String[] args) throws WhoisServerResolveException, WhoisIOException {
+    public static void main(String[] args) throws WhoisIOException {
         WhoisClient whoisClient = new WhoisClient(null);
         WhoisResponse response = whoisClient.query("bartosz.one", "whois.iana.org");
         List<String> nameServers = response.getFields().get("nserver");
@@ -30,7 +30,7 @@ public class Main {
 
 I'll explain what's going on here:
 
-1. class declarations, psvm, you probably know that stuff already.
+1. class declarations, psvm, you probably know that stuff already. All exceptions the query method throws extend ``WhoisIOException``, so it's enough for this example snippet.
 2. I created a new instance of ``WhoisClient`` with a ``null`` config parameter. Don't worry, it'll just use the default
    settings.
 3. I queried IANA's WHOIS server (``whois.iana.org:43``) for information about my domain - ``bartosz.one``. You can skip
@@ -93,7 +93,8 @@ I'll explain what's going on here:
   ```
 </details>
 
-Javadocs are available [here](https://bartosz11.github.io/whoisclient/).
+Javadocs are available [here](https://bartosz11.github.io/whoisclient/).  
+Minimum Java version: Java 8.
 
 ## Support/Contact
 

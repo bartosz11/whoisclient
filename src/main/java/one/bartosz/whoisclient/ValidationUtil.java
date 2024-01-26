@@ -43,4 +43,15 @@ public class ValidationUtil {
         return compiled;
     }
 
+    /**
+     * Checks if an int isn't negative.
+     * @param timeout The integer value to check
+     * @return Specified value, if valid
+     * @throws IllegalArgumentException Thrown if specified value is negative.
+     */
+    public static int validateTimeout(int timeout) {
+        if (timeout < 0) throw new IllegalArgumentException("Connect timeout value cannot be negative.");
+        return timeout;
+    }
+
 }

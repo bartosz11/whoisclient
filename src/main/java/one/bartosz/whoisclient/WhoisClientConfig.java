@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
  * - Pattern used for extracting keys and values from WHOIS responses. Default is ^\s*([\w /\-]+): +(.+?)$
  * - Default WHOIS server host. Default value is "whois.iana.org".  Can be overridden per-request.
  * - Default WHOIS server port. Default value is 43, as stated in the <a href="https://datatracker.ietf.org/doc/html/rfc3912">RFC 3912</a>. Can be overridden per-request.
+ * - Connect timeout. Default value is 5000 milliseconds. A timeout of 0 is considered infinite.
  */
 public class WhoisClientConfig {
 
@@ -22,6 +23,7 @@ public class WhoisClientConfig {
     private String defaultHost = "whois.iana.org";
     //RFC states that WHOIS servers should listen on port 43 TCP
     private int defaultPort = 43;
+    private int connectTimeoutMillis = 5000;
 
     /**
      * Returns the pattern used for extracting keys and values from WHOIS responses. Default is "^\s*([\w /\-]+): +(.+?)$"
@@ -96,6 +98,25 @@ public class WhoisClientConfig {
      */
     public WhoisClientConfig setDefaultPort(int defaultPort) {
         this.defaultPort = ValidationUtil.validatePort(defaultPort);
+        return this;
+    }
+
+    /**
+     * Returns the connect timeout, in milliseconds.
+     * @return Connect timeout, in milliseconds
+     */
+    public int getConnectTimeout() {
+        return connectTimeoutMillis;
+    }
+
+    /**
+     * Sets the connect timeout.
+     * @param connectTimeout Connect timeout to set, in milliseconds. 0 is considered an infinite timeout.
+     * @return This instance of WhoisClientConfig, allowing for setter method chaining.
+     * @throws IllegalArgumentException Thrown when connectTimeout is negative.
+     */
+    public WhoisClientConfig setConnectTimeout(int connectTimeout) {
+        this.connectTimeoutMillis = ValidationUtil.validateTimeout(connectTimeout);
         return this;
     }
 }
