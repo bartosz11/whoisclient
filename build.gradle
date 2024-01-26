@@ -4,7 +4,7 @@ plugins {
 }
 
 ext {
-    whoisclient_version = '0.0.2-SNAPSHOT'
+    whoisclient_version = '0.0.2'
 }
 
 group = 'one.bartosz'
